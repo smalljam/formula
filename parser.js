@@ -1,4 +1,3 @@
-
 (function(){
   var that = {};
 
@@ -59,7 +58,21 @@
   that.parse = function(code) {
     var tokens = tokenize(code);
     var position = 0;
+    var tokensCount = {
+      number: 0,
+      name: 0,
+      category: 0,
+      item: 0
+    }
+    var thistokens = {
+      numbers: [],
+      names: [],
+      categories: [],
+      items: []
+    }
     var result = parseExpr();
+    result.tokensCount = tokensCount;
+    result.tokens = thistokens;
 
     if (position !== tokens.length)
       throw new SyntaxError("unexpected '" + peek() + "'");
@@ -88,15 +101,23 @@
 
       if (isNumber(t)) {
         consume(t);
+        tokensCount.number++;
+        thistokens.numbers.push(t);
         return {type: "number", value: t};
       } else if (isName(t)) {
         consume(t);
+        tokensCount.name++;
+        thistokens.names.push(t);
         return {type: "name", id: t};
       } else if (isCategory(t)) {
         consume(t);
+        tokensCount.category++;
+        thistokens.categories.push(t);
         return {type: "category", id: t};
       } else if (isItem(t)) {
         consume(t);
+        tokensCount.item++;
+        thistokens.items.push(t);
         return {type: "item", id: t};
       } else if (t === "(") {
         consume(t);
@@ -146,6 +167,7 @@
 
 
   that.evaluateTree = function(parseTree) {
+
     function evaluatePart(part) {
       var result;
       switch(part.type){
@@ -189,10 +211,10 @@
     return that.evaluateTree( that.parse(formula) )
   }
 
-  if(module){
-    return module.exports = that;
+  try {
+    module.exports = that;
+  } catch(e) {
+    window.formulaParser = that;
   }
-
-  window.formulaParser = that;
-
 }());
+
